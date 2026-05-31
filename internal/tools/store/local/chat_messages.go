@@ -72,8 +72,8 @@ func (s *LocalStore) AppendMessage(ch *store.Chat, msg store.Turn) {
 		return
 	}
 	defer f.Close()
+	line = append(line, '\n')
 	f.Write(line)
-	f.Write([]byte{'\n'})
 }
 
 func (s *LocalStore) ReplaceMessages(ch *store.Chat, msgs []store.Turn) error {
