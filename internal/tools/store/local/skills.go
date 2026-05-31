@@ -5,6 +5,7 @@ import (
 	"gogogot/internal/tools/store"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -126,9 +127,16 @@ func splitSkillYAMLLine(line string) (key, val string, ok bool) {
 		return "", "", false
 	}
 	key = strings.TrimSpace(line[:idx])
-	val = strings.TrimSpace(line[idx+1:])
-	val = strings.Trim(val, `"'`)
-	return key, val, true
+	raw := strings.TrimSpace(line[idx+1:])
+	if len(raw) >= 2 && raw[0] == '"' && raw[len(raw)-1] == '"' {
+		if unq, err := strconv.Unquote(raw); err == nil {
+			return key, unq, true
+		}
+	}
+	if len(raw) >= 2 && raw[0] == '\'' && raw[len(raw)-1] == '\'' {
+		return key, raw[1 : len(raw)-1], true
+	}
+	return key, raw, true
 }
 
 func formatSkillMd(name, description, body string) string {
