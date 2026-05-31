@@ -110,5 +110,42 @@ func ScheduleTools(sched *scheduler.Scheduler) []types.Tool {
 				return types.Result{Output: fmt.Sprintf("removed scheduled task %q", id)}
 			},
 		},
+		{
+			Name:  "schedule_pause",
+			Label: "Pausing schedule",
+			Description: "Pause or resume a scheduled recurring task. A paused task keeps its configuration and history but stops firing until resumed. Persists across restarts.",
+			Parameters: map[string]any{
+				"id": map[string]any{
+					"type":        "string",
+					"description": "The task ID to pause or resume",
+				},
+				"paused": map[string]any{
+					"type":        "boolean",
+					"description": "true to pause, false to resume",
+				},
+			},
+			Required: []string{"id", "paused"},
+			Handler: func(_ context.Context, input map[string]any) types.Result {
+				if sched == nil {
+					return types.Result{Output: "scheduler not available", IsErr: true}
+				}
+				id, err := types.GetString(input, "id")
+				if err != nil {
+					return types.ErrResult(err)
+				}
+				paused, ok := input["paused"].(bool)
+				if !ok {
+					return types.Errf("paused must be a boolean")
+				}
+				if err := sched.Pause(id, paused); err != nil {
+					return types.Errf("failed to pause/resume: %v", err)
+				}
+				action := "paused"
+				if !paused {
+					action = "resumed"
+				}
+				return types.Result{Output: fmt.Sprintf("%s scheduled task %q", action, id)}
+			},
+		},
 	}
 }

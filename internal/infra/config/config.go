@@ -17,6 +17,7 @@ type LLMConfig struct {
 	Model     string
 	Provider  string // "anthropic", "openai", or "openrouter"
 	MaxTokens int
+	Timeout   time.Duration // per-LLM-call timeout (GOGOGOT_LLM_TIMEOUT; 0 -> 3m default)
 }
 
 type SchedulerConfig struct {
@@ -86,6 +87,15 @@ func Load() (*Config, error) {
 		if err == nil && v > 0 {
 			cfg.LLM.MaxTokens = v
 		}
+	}
+
+	if s := os.Getenv("GOGOGOT_LLM_TIMEOUT"); s != "" {
+		if d, err := time.ParseDuration(s); err == nil && d > 0 {
+			cfg.LLM.Timeout = d
+		}
+	}
+	if cfg.LLM.Timeout <= 0 {
+		cfg.LLM.Timeout = 3 * time.Minute
 	}
 
 	if s := os.Getenv("GOGOGOT_SCHEDULER_TASK_TIMEOUT"); s != "" {

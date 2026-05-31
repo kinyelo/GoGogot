@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gogogot/internal/llm/types"
+	"net/http"
 	"strings"
 	"time"
 
@@ -19,9 +20,11 @@ type Adapter struct {
 }
 
 func NewAdapter(baseURL, apiKey string, supportsVision bool) *Adapter {
+	httpClient := &http.Client{Timeout: 5 * time.Minute}
 	c := openai.NewClient(
 		oaioption.WithBaseURL(baseURL),
 		oaioption.WithAPIKey(apiKey),
+		oaioption.WithHTTPClient(httpClient),
 	)
 	return &Adapter{client: &c, supportsVision: supportsVision}
 }

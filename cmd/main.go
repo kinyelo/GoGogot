@@ -82,6 +82,7 @@ func buildEngine(cfg *config.Config, ch channel.Channel) (*core.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
+	provider.Timeout = cfg.LLM.Timeout
 
 	sched := scheduler.New(cfg.DataDir, nil, st.LoadTimezone(), scheduler.Options{
 		TaskTimeout:   cfg.Scheduler.TaskTimeout,

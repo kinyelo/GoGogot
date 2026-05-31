@@ -5,6 +5,7 @@ import (
 	anthpkg "gogogot/internal/llm/anthropic"
 	oaipkg "gogogot/internal/llm/openai"
 	"gogogot/internal/llm/types"
+	"time"
 )
 
 type (
@@ -43,6 +44,7 @@ type Client struct {
 	model    string
 	tools    []ToolDef
 	provider Provider
+	timeout  time.Duration
 }
 
 func NewClient(p Provider, toolDefs []ToolDef) *Client {
@@ -59,7 +61,16 @@ func NewClient(p Provider, toolDefs []ToolDef) *Client {
 		model:    p.Model,
 		tools:    toolDefs,
 		provider: p,
+		timeout:  p.Timeout,
 	}
+}
+
+// callCtx wraps the parent context with the per-call timeout when configured.
+func (c *Client) callCtx(parent context.Context) (context.Context, context.CancelFunc) {
+	if c.timeout > 0 {
+		return context.WithTimeout(parent, c.timeout)
+	}
+	return parent, func() {}
 }
 
 func (c *Client) SetTools(defs []ToolDef) {
@@ -108,5 +119,7 @@ func (c *Client) Call(ctx context.Context, messages []Message, opts CallOptions)
 		maxTokens = 4096
 	}
 
-	return c.adapter.Call(ctx, c.model, sys, messages, tools, maxTokens)
+	callCtx, cancel := c.callCtx(ctx)
+	defer cancel()
+	return c.adapter.Call(callCtx, c.model, sys, messages, tools, maxTokens)
 }

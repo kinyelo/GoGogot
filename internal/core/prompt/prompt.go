@@ -158,7 +158,7 @@ You have full bash access but be mindful of the ephemeral environment.`
 
 func buildSchedulingSection() string {
 	return `SELF-SCHEDULING: You have a built-in scheduler for recurring tasks.
-Use schedule_add, schedule_list, schedule_remove tools — NOT crontab or system cron.
+Use schedule_add, schedule_list, schedule_remove, schedule_pause tools — NOT crontab or system cron.
 The built-in scheduler persists to /data and restores automatically across restarts.
 Cron schedules run in the owner's local timezone (from user.md).
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gogogot/internal/llm/types"
+	"net/http"
 	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
@@ -16,7 +17,10 @@ type Adapter struct {
 }
 
 func NewAdapter(apiKey, baseURL string) *Adapter {
-	var opts []option.RequestOption
+	httpClient := &http.Client{Timeout: 5 * time.Minute}
+	opts := []option.RequestOption{
+		option.WithHTTPClient(httpClient),
+	}
 	if apiKey != "" {
 		opts = append(opts, option.WithAPIKey(apiKey))
 	}

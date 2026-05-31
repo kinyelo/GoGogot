@@ -57,6 +57,7 @@ type TaskData struct {
 	Command   string    `json:"command"`
 	Skill     string    `json:"skill,omitempty"`
 	Label     string    `json:"label"`
+	Paused    bool      `json:"paused,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	State     TaskState `json:"state"`
 }
@@ -179,6 +180,20 @@ func (s *Scheduler) Remove(id string) error {
 	return s.save()
 }
 
+// Pause sets the paused flag on a task. A paused task keeps its cron entry and
+// state but is skipped when it fires, until resumed. Persists across restarts.
+func (s *Scheduler) Pause(id string, paused bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	task, ok := s.tasks[id]
+	if !ok {
+		return fmt.Errorf("task %q not found", id)
+	}
+	task.Paused = paused
+	return s.save()
+}
+
 func (s *Scheduler) List() []TaskInfo {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -202,6 +217,11 @@ func (s *Scheduler) makeRunner(id, command, skill string) func() {
 		task, ok := s.tasks[id]
 		s.mu.Unlock()
 		if !ok {
+			return
+		}
+
+		if task.Paused {
+			log.Info().Str("id", id).Msg("scheduler: task paused, skipping")
 			return
 		}
 

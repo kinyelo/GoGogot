@@ -6,19 +6,21 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Provider struct {
-	ID              string  `json:"id"`
-	Label           string  `json:"label"`
-	Model           string  `json:"model"`
-	BaseURL         string  `json:"base_url,omitempty"`
-	APIKey          string  `json:"-"`
-	Format          string  `json:"format,omitempty"`
-	ContextWindow   int     `json:"context_window"`
-	SupportsVision  bool    `json:"supports_vision,omitempty"`
-	InputPricePerM  float64 `json:"-"`
-	OutputPricePerM float64 `json:"-"`
+	ID              string        `json:"id"`
+	Label           string        `json:"label"`
+	Model           string        `json:"model"`
+	BaseURL         string        `json:"base_url,omitempty"`
+	APIKey          string        `json:"-"`
+	Format          string        `json:"format,omitempty"`
+	ContextWindow   int           `json:"context_window"`
+	SupportsVision  bool          `json:"supports_vision,omitempty"`
+	InputPricePerM  float64       `json:"-"`
+	OutputPricePerM float64       `json:"-"`
+	Timeout         time.Duration `json:"-"` // per-LLM-call timeout (0 = no per-call deadline)
 }
 
 var aliases = map[string]string{

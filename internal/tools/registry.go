@@ -23,6 +23,7 @@ func NewRegistry(st store.Store, braveAPIKey string, searchFn ChatSearchFunc, ex
 		systemtools.BashTool(),
 		systemtools.EditFileTool(),
 		systemtools.SystemInfoTool(),
+		systemtools.FileSearchTool(),
 	}
 	all = append(all, systemtools.FileTools()...)
 	all = append(all, webtools.WebSearchTool(braveAPIKey))

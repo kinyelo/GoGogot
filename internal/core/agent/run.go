@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gogogot/internal/core/agent/hook"
 	"gogogot/internal/core/transport"
@@ -83,7 +84,17 @@ func (a *Agent) Run(ctx context.Context, conv hook.Conversation, userBlocks []ty
 			ExtraTools: a.localToolDefs(),
 		})
 		if err != nil {
-			a.bus.Emit(transport.Error, transport.ErrorData{Error: err.Error()})
+			// Clean cancellation (user /stop or shutdown): save and exit quietly.
+			if errors.Is(err, context.Canceled) {
+				log.Info().Str("conversation", conv.String()).Msg("agent.Run cancelled during LLM call")
+				_ = conv.Save()
+				return err
+			}
+			msg := err.Error()
+			if errors.Is(err, context.DeadlineExceeded) {
+				msg = "LLM provider did not respond in time. The model may be overloaded — try again later."
+			}
+			a.bus.Emit(transport.Error, transport.ErrorData{Error: msg})
 			return err
 		}
 		llmDuration := time.Since(callStart)
