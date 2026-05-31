@@ -2,8 +2,11 @@ package tools
 
 import (
 	"context"
-	llmtypes "gogogot/internal/llm/types"
-	"gogogot/internal/tools/store"
+	llmtypes "gogogot/internal/domain"
+	"gogogot/internal/store"
+	"gogogot/internal/tools/memory"
+	"gogogot/internal/tools/recall"
+	"gogogot/internal/tools/skills"
 	systemtools "gogogot/internal/tools/system"
 	"gogogot/internal/tools/types"
 	webtools "gogogot/internal/tools/web"
@@ -30,9 +33,9 @@ func NewRegistry(st store.Store, braveAPIKey string, searchFn ChatSearchFunc, ex
 	all = append(all, webtools.WebFetchTool())
 	all = append(all, webtools.WebRequestTool())
 	all = append(all, webtools.WebDownloadTool())
-	all = append(all, MemoryTools(st)...)
-	all = append(all, RecallTool(searchFn))
-	all = append(all, SkillTools(st)...)
+	all = append(all, memory.MemoryTools(st)...)
+	all = append(all, recall.RecallTool(searchFn))
+	all = append(all, skills.SkillTools(st)...)
 	all = append(all, extra...)
 
 	r := &Registry{tt: make(map[string]types.Tool, len(all))}

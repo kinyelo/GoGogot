@@ -2,7 +2,7 @@ package local
 
 import (
 	"fmt"
-	"gogogot/internal/tools/store"
+	"gogogot/internal/store"
 	"os"
 	"path/filepath"
 	"strconv"

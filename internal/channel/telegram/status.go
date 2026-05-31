@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gogogot/internal/channel/telegram/client"
 	"gogogot/internal/channel/telegram/format"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"strings"
 
 	"github.com/go-telegram/bot/models"

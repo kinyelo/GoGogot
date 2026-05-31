@@ -3,8 +3,8 @@ package agent
 import (
 	"encoding/json"
 	"gogogot/internal/core/agent/hook"
-	"gogogot/internal/llm/types"
-	"gogogot/internal/tools/store"
+	types "gogogot/internal/domain"
+	"gogogot/internal/store"
 	"time"
 
 	"github.com/rs/zerolog/log"

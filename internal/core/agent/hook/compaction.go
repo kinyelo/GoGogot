@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"gogogot/internal/llm"
-	"gogogot/internal/llm/types"
-	"gogogot/internal/tools/store"
+	types "gogogot/internal/domain"
+	"gogogot/internal/store"
 	"strings"
 	"time"
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"gogogot/internal/llm"
-	"gogogot/internal/llm/types"
-	"gogogot/internal/tools/store"
+	types "gogogot/internal/domain"
+	"gogogot/internal/store"
 )
 
 const maxSummariesForSearch = 50

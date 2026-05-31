@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"gogogot/internal/core/agent/hook"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"gogogot/internal/llm"
-	"gogogot/internal/llm/types"
-	"gogogot/internal/tools/store"
+	types "gogogot/internal/domain"
+	"gogogot/internal/store"
 	tooltypes "gogogot/internal/tools/types"
 	"time"
 

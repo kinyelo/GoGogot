@@ -3,7 +3,7 @@ package system
 import (
 	"context"
 	"fmt"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"gogogot/internal/tools/types"
 	"strings"
 	"sync"

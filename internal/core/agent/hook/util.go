@@ -3,7 +3,7 @@ package hook
 import (
 	"encoding/json"
 	"fmt"
-	"gogogot/internal/llm/types"
+	types "gogogot/internal/domain"
 	"strings"
 	"time"
 )

@@ -2,7 +2,7 @@ package channel
 
 import (
 	"context"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 )
 
 const (

@@ -3,7 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
-	"gogogot/internal/infra/utils"
+	"gogogot/internal/utils"
 	"gogogot/internal/tools/types"
 	"io"
 	"net/http"

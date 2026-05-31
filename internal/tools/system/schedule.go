@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gogogot/internal/infra/scheduler"
+	"gogogot/internal/scheduler"
 	"gogogot/internal/tools/types"
 )
 

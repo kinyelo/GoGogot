@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"gogogot/internal/channel"
 	"gogogot/internal/channel/telegram/client"
-	"gogogot/internal/core/transport"
-	"gogogot/internal/tools/store"
+	"gogogot/internal/transport"
+	"gogogot/internal/store"
 	"strings"
 )
 

@@ -3,8 +3,8 @@ package local
 import (
 	"bufio"
 	"encoding/json"
-	"gogogot/internal/llm/types"
-	"gogogot/internal/tools/store"
+	types "gogogot/internal/domain"
+	"gogogot/internal/store"
 	"os"
 	"time"
 

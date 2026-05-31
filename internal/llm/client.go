@@ -4,7 +4,7 @@ import (
 	"context"
 	anthpkg "gogogot/internal/llm/anthropic"
 	oaipkg "gogogot/internal/llm/openai"
-	"gogogot/internal/llm/types"
+	types "gogogot/internal/domain"
 	"time"
 )
 

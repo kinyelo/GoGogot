@@ -2,7 +2,7 @@ package system
 
 import (
 	"context"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"gogogot/internal/tools/types"
 )
 

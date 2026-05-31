@@ -1,9 +1,9 @@
-package tools
+package identity
 
 import (
 	"context"
 	"fmt"
-	"gogogot/internal/tools/store"
+	"gogogot/internal/store"
 	"gogogot/internal/tools/types"
 	"time"
 

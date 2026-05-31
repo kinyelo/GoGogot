@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"gogogot/internal/llm"
-	"gogogot/internal/tools/store"
+	"gogogot/internal/store"
 
 	"github.com/rs/zerolog/log"
 )

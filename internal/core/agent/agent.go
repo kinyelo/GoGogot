@@ -3,9 +3,9 @@ package agent
 import (
 	"context"
 	"gogogot/internal/core/agent/hook"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"gogogot/internal/llm"
-	llmTypes "gogogot/internal/llm/types"
+	llmTypes "gogogot/internal/domain"
 	"gogogot/internal/tools"
 	"gogogot/internal/tools/system"
 	toolTypes "gogogot/internal/tools/types"

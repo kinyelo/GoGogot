@@ -1,14 +1,26 @@
 package store
 
 import (
-	"context"
-	"fmt"
-	"gogogot/internal/llm/types"
-	"strings"
+	domain "gogogot/internal/domain"
 	"time"
 )
 
-// --- Chat ---
+// The cross-cutting value types live in the domain package. They are aliased
+// here so existing store.* references (store.Turn, store.Usage, …) keep working
+// while the canonical definitions stay in one place.
+type (
+	Turn           = domain.Turn
+	Usage          = domain.Usage
+	ChatInfo       = domain.ChatInfo
+	ChatSearchFunc = domain.ChatSearchFunc
+	Skill          = domain.Skill
+)
+
+// FormatSkillsForPrompt is re-exported from domain for callers that already
+// reference store.FormatSkillsForPrompt.
+var FormatSkillsForPrompt = domain.FormatSkillsForPrompt
+
+// --- Chat (active record: carries a back-reference to its persister) ---
 
 type Chat struct {
 	ID        string    `json:"id"`
@@ -62,30 +74,7 @@ func (c *Chat) Messages() []Turn        { return c.messages }
 func (c *Chat) TotalUsage() *Usage      { return &c.totalUsage }
 func (c *Chat) SetMessages(msgs []Turn) { c.messages = msgs }
 
-type ChatInfo struct {
-	ID        string
-	Title     string
-	Summary   string
-	Tags      []string
-	Status    string
-	StartedAt time.Time
-	EndedAt   time.Time
-}
-
-// ChatSearchFunc is a callback that searches past chats by query.
-type ChatSearchFunc func(ctx context.Context, query string) ([]ChatInfo, error)
-
-// --- Messages & Usage ---
-
-// Turn is a single message in the LLM conversation context.
-// Rich format: includes tool_use, tool_result, images — everything the LLM sees.
-type Turn struct {
-	Role      string // "user" | "assistant"
-	Content   []types.ContentBlock
-	Timestamp time.Time
-	Usage     *Usage
-	Metadata  map[string]any
-}
+// --- Store-local projections (persistence concerns, not domain) ---
 
 // Message is a text-only representation used for summarization and history display.
 type Message struct {
@@ -93,65 +82,13 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-// Usage tracks token consumption and cost for a run.
-type Usage struct {
-	InputTokens      int
-	OutputTokens     int
-	CacheReadTokens  int
-	CacheWriteTokens int
-	TotalTokens      int
-	LLMCalls         int
-	ToolCalls        int
-	Cost             float64 // estimated USD
-	Duration         time.Duration
-}
-
-func (u *Usage) Add(other Usage) {
-	u.InputTokens += other.InputTokens
-	u.OutputTokens += other.OutputTokens
-	u.CacheReadTokens += other.CacheReadTokens
-	u.CacheWriteTokens += other.CacheWriteTokens
-	u.TotalTokens += other.TotalTokens
-	u.LLMCalls += other.LLMCalls
-	u.ToolCalls += other.ToolCalls
-	u.Cost += other.Cost
-	u.Duration += other.Duration
-}
-
-// --- Identity ---
-
 type SoulInfo struct {
 	Soul string
 	User string
 }
 
-// --- Memory ---
-
 type MemoryFile struct {
 	Name    string
 	Size    int64
 	Content string
-}
-
-// --- Skills ---
-
-type Skill struct {
-	Name        string
-	Description string
-	FilePath    string
-	Dir         string
-}
-
-func FormatSkillsForPrompt(skills []Skill) string {
-	if len(skills) == 0 {
-		return ""
-	}
-	var b strings.Builder
-	b.WriteString("<available_skills>\n")
-	for _, s := range skills {
-		fmt.Fprintf(&b, "<skill name=%q description=%q location=%q />\n",
-			s.Name, s.Description, s.FilePath)
-	}
-	b.WriteString("</available_skills>")
-	return b.String()
 }

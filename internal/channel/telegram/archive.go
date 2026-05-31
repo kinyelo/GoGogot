@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"io"
 	"path/filepath"
 	"strings"

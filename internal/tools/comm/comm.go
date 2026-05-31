@@ -1,8 +1,8 @@
-package tools
+package comm
 
 import (
 	"context"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"gogogot/internal/tools/types"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gogogot/internal/channel/telegram"
-	"gogogot/internal/core/transport"
+	"gogogot/internal/transport"
 	"os"
 	"strconv"
 	"time"

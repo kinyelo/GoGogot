@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	"gogogot/internal/infra/utils"
+	"gogogot/internal/utils"
 	"gogogot/internal/llm"
-	"gogogot/internal/llm/types"
-	"gogogot/internal/tools/store"
+	types "gogogot/internal/domain"
+	"gogogot/internal/store"
 
 	"github.com/rs/zerolog/log"
 )

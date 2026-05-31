@@ -3,25 +3,28 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"gogogot/internal/channel"
 	"gogogot/internal/channel/telegram"
+	"gogogot/internal/config"
 	"gogogot/internal/core"
 	"gogogot/internal/core/agent"
 	"gogogot/internal/core/agent/hook"
 	"gogogot/internal/core/chat"
 	"gogogot/internal/core/prompt"
-	"gogogot/internal/infra/config"
-	"gogogot/internal/infra/logger"
-	"gogogot/internal/infra/scheduler"
 	"gogogot/internal/llm"
+	"gogogot/internal/logger"
+	"gogogot/internal/scheduler"
+	"gogogot/internal/store"
+	"gogogot/internal/store/local"
 	"gogogot/internal/tools"
-	"gogogot/internal/tools/store"
-	"gogogot/internal/tools/store/local"
+	"gogogot/internal/tools/comm"
+	"gogogot/internal/tools/identity"
 	"gogogot/internal/tools/system"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -89,10 +92,10 @@ func buildEngine(cfg *config.Config, ch channel.Channel) (*core.Engine, error) {
 		MaxConcurrent: cfg.Scheduler.MaxConcurrent,
 	})
 
-	extra := append(tools.ChannelTools(),
+	extra := append(comm.ChannelTools(),
 		system.ScheduleTools(sched)...,
 	)
-	extra = append(extra, tools.IdentityTools(st, sched.SetLocation)...)
+	extra = append(extra, identity.IdentityTools(st, sched.SetLocation)...)
 
 	client := llm.NewClient(*provider, nil)
 	chatMgr := chat.NewManager(st, client)
