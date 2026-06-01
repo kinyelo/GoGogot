@@ -2,8 +2,8 @@ package system
 
 import (
 	"context"
-	"gogogot/internal/transport"
-	"gogogot/internal/tools/types"
+	"github.com/aspasskiy/gogogot/internal/transport"
+	"github.com/aspasskiy/gogogot/internal/tools/types"
 )
 
 func AgentTools(tp *TaskPlan) []types.Tool {

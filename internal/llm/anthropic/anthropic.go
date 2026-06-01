@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	types "gogogot/internal/domain"
+	types "github.com/aspasskiy/gogogot/internal/domain"
 	"net/http"
 	"time"
 

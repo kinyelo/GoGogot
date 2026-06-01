@@ -2,7 +2,7 @@ package telegram
 
 import (
 	"context"
-	"gogogot/internal/transport"
+	"github.com/aspasskiy/gogogot/internal/transport"
 	"time"
 )
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"gogogot/internal/llm"
-	"gogogot/internal/store"
+	"github.com/aspasskiy/gogogot/internal/llm"
+	"github.com/aspasskiy/gogogot/internal/store"
 
 	"github.com/rs/zerolog/log"
 )

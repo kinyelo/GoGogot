@@ -1,7 +1,7 @@
 package store
 
 import (
-	domain "gogogot/internal/domain"
+	domain "github.com/aspasskiy/gogogot/internal/domain"
 	"time"
 )
 

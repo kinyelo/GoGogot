@@ -2,9 +2,9 @@ package telegram
 
 import (
 	"context"
-	"gogogot/internal/channel"
-	"gogogot/internal/channel/telegram/client"
-	"gogogot/internal/transport"
+	"github.com/aspasskiy/gogogot/internal/channel"
+	"github.com/aspasskiy/gogogot/internal/channel/telegram/client"
+	"github.com/aspasskiy/gogogot/internal/transport"
 	"sync"
 
 	"github.com/go-telegram/bot/models"

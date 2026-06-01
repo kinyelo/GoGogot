@@ -3,8 +3,8 @@ package transport
 import (
 	"encoding/base64"
 	"fmt"
-	"gogogot/internal/utils"
-	types "gogogot/internal/domain"
+	"github.com/aspasskiy/gogogot/internal/utils"
+	types "github.com/aspasskiy/gogogot/internal/domain"
 	"os"
 	"path/filepath"
 	"strings"

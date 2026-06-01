@@ -3,10 +3,10 @@ package telegram
 import (
 	"context"
 	"fmt"
-	"gogogot/internal/channel"
-	"gogogot/internal/channel/telegram/client"
-	"gogogot/internal/transport"
-	"gogogot/internal/store"
+	"github.com/aspasskiy/gogogot/internal/channel"
+	"github.com/aspasskiy/gogogot/internal/channel/telegram/client"
+	"github.com/aspasskiy/gogogot/internal/transport"
+	"github.com/aspasskiy/gogogot/internal/store"
 	"strings"
 )
 

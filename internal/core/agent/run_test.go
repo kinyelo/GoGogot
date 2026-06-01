@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
-	types "gogogot/internal/domain"
-	"gogogot/internal/llm"
-	"gogogot/internal/transport"
+	types "github.com/aspasskiy/gogogot/internal/domain"
+	"github.com/aspasskiy/gogogot/internal/llm"
+	"github.com/aspasskiy/gogogot/internal/transport"
 )
 
 // fakeLLM returns canned responses in order, with no network or provider.

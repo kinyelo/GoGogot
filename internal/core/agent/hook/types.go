@@ -2,8 +2,8 @@ package hook
 
 import (
 	"context"
-	domain "gogogot/internal/domain"
-	"gogogot/internal/llm"
+	domain "github.com/aspasskiy/gogogot/internal/domain"
+	"github.com/aspasskiy/gogogot/internal/llm"
 	"time"
 )
 

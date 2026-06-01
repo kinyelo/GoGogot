@@ -2,7 +2,7 @@ package agent
 
 import (
 	"encoding/json"
-	types "gogogot/internal/domain"
+	types "github.com/aspasskiy/gogogot/internal/domain"
 
 	"github.com/rs/zerolog/log"
 )

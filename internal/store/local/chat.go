@@ -3,7 +3,7 @@ package local
 import (
 	"encoding/json"
 	"fmt"
-	"gogogot/internal/store"
+	"github.com/aspasskiy/gogogot/internal/store"
 	"os"
 	"path/filepath"
 	"sort"

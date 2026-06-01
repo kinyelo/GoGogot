@@ -8,10 +8,10 @@ generate:
 	curl -sf https://openrouter.ai/api/v1/models -o internal/llm/catalog/openrouter_models.json
 
 run:
-	go run ./cmd $(ARGS)
+	go run ./cmd/gogogot $(ARGS)
 
 build: generate
-	go build -o $(BIN) ./cmd
+	go build -o $(BIN) ./cmd/gogogot
 
 clean:
 	rm -f $(BIN)

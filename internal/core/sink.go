@@ -2,9 +2,9 @@ package core
 
 import (
 	"context"
-	domain "gogogot/internal/domain"
-	"gogogot/internal/store"
-	"gogogot/internal/transport"
+	domain "github.com/aspasskiy/gogogot/internal/domain"
+	"github.com/aspasskiy/gogogot/internal/store"
+	"github.com/aspasskiy/gogogot/internal/transport"
 
 	"github.com/rs/zerolog/log"
 )

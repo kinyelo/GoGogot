@@ -2,8 +2,8 @@ package comm
 
 import (
 	"context"
-	"gogogot/internal/transport"
-	"gogogot/internal/tools/types"
+	"github.com/aspasskiy/gogogot/internal/transport"
+	"github.com/aspasskiy/gogogot/internal/tools/types"
 )
 
 func ChannelTools() []types.Tool {

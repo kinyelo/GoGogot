@@ -3,8 +3,8 @@ package recall
 import (
 	"context"
 	"fmt"
-	"gogogot/internal/store"
-	"gogogot/internal/tools/types"
+	"github.com/aspasskiy/gogogot/internal/store"
+	"github.com/aspasskiy/gogogot/internal/tools/types"
 	"strings"
 )
 

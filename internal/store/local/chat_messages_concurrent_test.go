@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	types "gogogot/internal/domain"
-	"gogogot/internal/store"
+	types "github.com/aspasskiy/gogogot/internal/domain"
+	"github.com/aspasskiy/gogogot/internal/store"
 )
 
 func newConcurrentChatTestStore(t *testing.T) (*LocalStore, *store.Chat) {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gogogot/internal/scheduler"
-	"gogogot/internal/tools/types"
+	"github.com/aspasskiy/gogogot/internal/scheduler"
+	"github.com/aspasskiy/gogogot/internal/tools/types"
 )
 
 func ScheduleTools(sched *scheduler.Scheduler) []types.Tool {

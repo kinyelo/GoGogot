@@ -2,9 +2,9 @@ package llm
 
 import (
 	"context"
-	anthpkg "gogogot/internal/llm/anthropic"
-	oaipkg "gogogot/internal/llm/openai"
-	types "gogogot/internal/domain"
+	anthpkg "github.com/aspasskiy/gogogot/internal/llm/anthropic"
+	oaipkg "github.com/aspasskiy/gogogot/internal/llm/openai"
+	types "github.com/aspasskiy/gogogot/internal/domain"
 	"time"
 )
 

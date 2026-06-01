@@ -2,14 +2,14 @@ package tools
 
 import (
 	"context"
-	llmtypes "gogogot/internal/domain"
-	"gogogot/internal/store"
-	"gogogot/internal/tools/memory"
-	"gogogot/internal/tools/recall"
-	"gogogot/internal/tools/skills"
-	systemtools "gogogot/internal/tools/system"
-	"gogogot/internal/tools/types"
-	webtools "gogogot/internal/tools/web"
+	llmtypes "github.com/aspasskiy/gogogot/internal/domain"
+	"github.com/aspasskiy/gogogot/internal/store"
+	"github.com/aspasskiy/gogogot/internal/tools/memory"
+	"github.com/aspasskiy/gogogot/internal/tools/recall"
+	"github.com/aspasskiy/gogogot/internal/tools/skills"
+	systemtools "github.com/aspasskiy/gogogot/internal/tools/system"
+	"github.com/aspasskiy/gogogot/internal/tools/types"
+	webtools "github.com/aspasskiy/gogogot/internal/tools/web"
 
 	"github.com/rs/zerolog/log"
 )
