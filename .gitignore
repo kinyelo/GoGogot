@@ -1,13 +1,6 @@
 # Binaries
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
 gogogot
 gogogot-*
-sofie
-sofie-*
 
 # Test
 *.test
@@ -26,7 +19,7 @@ go.work.sum
 *.swp
 *.swo
 *~
-.cursor/
+.claude
 
 # OS
 .DS_Store
@@ -42,12 +35,9 @@ deploy/deploy.sh
 
 # Data / state
 data/
-*.db
-*.sqlite
-*.sqlite3
-*.bolt
 *.log
 tmp/
+docs/
 
 # Docker
 docker-compose.override.yml
