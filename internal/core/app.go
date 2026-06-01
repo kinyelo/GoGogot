@@ -178,9 +178,15 @@ func (e *Engine) runAgent(ctx context.Context, msg channel.Message) {
 	blocks, cleanup := transport.ProcessAttachments(ch.ID, msg.Text, msg.Attachments)
 	defer cleanup()
 
+	input := agent.RunInput{
+		Messages:   ch.Messages(),
+		UserBlocks: blocks,
+	}
+	sink := newAgentSink(agentCtx, ch, bus)
+
 	go func() {
 		defer bus.Close()
-		if err := e.agent.Run(agentCtx, ch, blocks, bus); err != nil {
+		if err := e.agent.Run(agentCtx, input, sink); err != nil {
 			log.Error().Err(err).Msg("engine: agent run failed")
 		}
 	}()
@@ -237,20 +243,26 @@ func (e *Engine) RunScheduledTask(ctx context.Context, reply transport.Replier, 
 	promptText := prompt.ScheduledTaskPrompt(taskID, command, skill)
 	blocks := []types.ContentBlock{types.TextBlock(promptText)}
 
+	input := agent.RunInput{
+		Messages:   ch.Messages(),
+		UserBlocks: blocks,
+	}
+	sink := newAgentSink(agentCtx, ch, bus)
+
 	var runErr error
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
 		defer bus.Close()
-		runErr = e.agent.Run(agentCtx, ch, blocks, bus)
+		runErr = e.agent.Run(agentCtx, input, sink)
 	}()
 
+	// Drain events until the run finishes; the final text is carried explicitly
+	// by DoneEvent (not reconstructed from the streaming events).
 	var finalText string
 	for ev := range recv {
-		if ev.Kind == transport.LLMStream {
-			if d, ok := ev.Data.(transport.LLMStreamData); ok {
-				finalText = d.Text
-			}
+		if d, ok := ev.(transport.DoneEvent); ok {
+			finalText = d.Text
 		}
 	}
 	<-done

@@ -5,110 +5,116 @@ import (
 	"errors"
 	"fmt"
 	"gogogot/internal/core/agent/hook"
-	"gogogot/internal/transport"
-	"gogogot/internal/llm"
 	types "gogogot/internal/domain"
-	"gogogot/internal/store"
+	"gogogot/internal/llm"
 	tooltypes "gogogot/internal/tools/types"
+	"gogogot/internal/transport"
 	"time"
 
 	"github.com/rs/zerolog/log"
 )
 
-// Run executes the agent loop synchronously. Events are sent through the
-// provided Bus; the caller is responsible for creating and closing it.
-func (a *Agent) Run(ctx context.Context, conv hook.Conversation, userBlocks []types.ContentBlock, bus *transport.Bus) error {
-	a.bus = bus
+// RunInput is everything the agent needs for one run. Messages is the prior
+// history (treated as immutable); UserBlocks is the new user message. The agent
+// emits every turn it produces — starting with the user turn — as a
+// MessageEvent, leaving persistence entirely to the sink.
+type RunInput struct {
+	Messages   []types.Turn
+	UserBlocks []types.ContentBlock
+}
+
+// Run executes the agent loop synchronously, emitting typed events to the sink.
+// It never touches the store: persistence is the sink's responsibility.
+//
+// Exactly one terminal event is emitted: DoneEvent on success or ErrorEvent on
+// a hard failure. On cancellation it emits neither and returns ctx.Err() — the
+// orchestrator closing the event channel is the UI's cleanup signal.
+func (a *Agent) Run(ctx context.Context, input RunInput, sink transport.Sink) error {
+	a.sink = sink
 
 	runStart := time.Now()
-	log.Info().Str("conversation", conv.String()).Msg("agent.Run start")
-	defer func() {
-		elapsed := time.Since(runStart)
-		conv.TotalUsage().Duration += elapsed
-		total := *conv.TotalUsage()
-		log.Info().
-			Str("conversation", conv.String()).
-			Dur("elapsed", elapsed).
-			Int("total_input_tokens", total.InputTokens).
-			Int("total_output_tokens", total.OutputTokens).
-			Int("total_tool_calls", total.ToolCalls).
-			Str("total_cost", fmt.Sprintf("$%.4f", total.Cost)).
-			Msg("agent.Run done")
-		a.bus.Emit(transport.Done, transport.DoneData{Usage: total})
-	}()
+	log.Info().Int("history", len(input.Messages)).Msg("agent.Run start")
 
-	appendUserMessage(conv, userBlocks)
-	conv.Save()
+	// The new user message is persisted like any other turn — the orchestrator
+	// writes it when it sees this event.
+	userTurn := types.Turn{
+		Role:      string(types.RoleUser),
+		Content:   input.UserBlocks,
+		Timestamp: time.Now(),
+	}
+	a.emit(transport.MessageEvent{Turn: userTurn})
 
+	msgs := make([]types.Turn, 0, len(input.Messages)+1)
+	msgs = append(msgs, input.Messages...)
+	msgs = append(msgs, userTurn)
+
+	var total types.Usage
+	var finalText string // last assistant text produced; reported in DoneEvent
 	var toolCallCounter int
 
 	for iteration := 1; ; iteration++ {
 		if err := ctx.Err(); err != nil {
-			log.Info().Str("conversation", conv.String()).Msg("agent.Run cancelled")
-			_ = conv.Save()
+			log.Info().Msg("agent.Run cancelled")
 			return err
 		}
 
-		msgs := buildLLMMessages(conv)
 		sys := a.instructions()
-
-		tokensBefore := hook.EstimateTokens(conv.Messages())
-		msgCountBefore := len(conv.Messages())
+		tokensBefore := hook.EstimateTokens(msgs)
 
 		iterCtx := &hook.IterationContext{
 			Iteration:     iteration,
 			Model:         a.client.ModelID(),
 			System:        sys,
 			Messages:      msgs,
-			Conversation:  conv,
 			ContextWindow: a.client.ContextWindow(),
 			LLM:           a.client,
 		}
-		a.bus.Emit(transport.LLMStart, nil)
+		a.emit(transport.LLMStartEvent{})
 		a.runBeforeHooks(ctx, iterCtx)
 
-		if len(conv.Messages()) != msgCountBefore {
-			tokensAfter := hook.EstimateTokens(conv.Messages())
-			a.bus.Emit(transport.Compaction, transport.CompactionData{
+		// The compaction hook may have rewritten the working set in place.
+		if iterCtx.Compacted {
+			msgs = iterCtx.Messages
+			a.emit(transport.CompactionEvent{
+				Messages:     append([]types.Turn(nil), msgs...), // copy: the sink takes ownership
 				BeforeTokens: tokensBefore,
-				AfterTokens:  tokensAfter,
+				AfterTokens:  hook.EstimateTokens(msgs),
 			})
 		}
 
-		msgs = buildLLMMessages(conv)
-		iterCtx.Messages = msgs
-
 		callStart := time.Now()
-		resp, err := a.client.Call(ctx, msgs, llm.CallOptions{
+		resp, err := a.client.Call(ctx, buildLLMMessages(msgs), llm.CallOptions{
 			System:     sys,
 			ExtraTools: a.localToolDefs(),
 		})
 		if err != nil {
-			// Clean cancellation (user /stop or shutdown): save and exit quietly.
+			// Clean cancellation (user /stop or shutdown): exit quietly, no event.
 			if errors.Is(err, context.Canceled) {
-				log.Info().Str("conversation", conv.String()).Msg("agent.Run cancelled during LLM call")
-				_ = conv.Save()
+				log.Info().Msg("agent.Run cancelled during LLM call")
 				return err
 			}
 			msg := err.Error()
 			if errors.Is(err, context.DeadlineExceeded) {
 				msg = "LLM provider did not respond in time. The model may be overloaded — try again later."
 			}
-			a.bus.Emit(transport.Error, transport.ErrorData{Error: msg})
+			a.emit(transport.ErrorEvent{Error: msg})
 			return err
 		}
 		llmDuration := time.Since(callStart)
 
 		parsed := parseResponseBlocks(resp.Content)
 
-		conv.AppendMessage(store.Turn{
+		assistantTurn := types.Turn{
 			Role:      string(types.RoleAssistant),
 			Content:   parsed.assistantBlocks,
 			Timestamp: time.Now(),
-		})
+		}
+		a.emit(transport.MessageEvent{Turn: assistantTurn})
+		msgs = append(msgs, assistantTurn)
 
 		if parsed.textContent != "" {
-			a.bus.Emit(transport.LLMStream, transport.LLMStreamData{Text: parsed.textContent})
+			finalText = parsed.textContent
+			a.emit(transport.LLMStreamEvent{Text: parsed.textContent})
 		}
 
 		result := &hook.IterationResult{
@@ -119,7 +125,7 @@ func (a *Agent) Run(ctx context.Context, conv hook.Conversation, userBlocks []ty
 		if len(parsed.toolCalls) == 0 {
 			a.runAfterHooks(ctx, iterCtx, result)
 			if result.Usage != nil {
-				a.bus.Emit(transport.LLMResponse, transport.LLMResponseData{Usage: *result.Usage})
+				total.Add(*result.Usage)
 			}
 			break
 		}
@@ -128,22 +134,29 @@ func (a *Agent) Run(ctx context.Context, conv hook.Conversation, userBlocks []ty
 		toolResults, summaries := a.executeToolCallLoop(ctx, parsed.toolCalls, &toolCallCounter)
 		result.ToolCalls = summaries
 
-		conv.AppendMessage(store.Turn{
+		toolTurn := types.Turn{
 			Role:      string(types.RoleUser),
 			Content:   toolResults,
 			Timestamp: time.Now(),
-		})
+		}
+		a.emit(transport.MessageEvent{Turn: toolTurn})
+		msgs = append(msgs, toolTurn)
 
 		a.runAfterHooks(ctx, iterCtx, result)
 		if result.Usage != nil {
-			a.bus.Emit(transport.LLMResponse, transport.LLMResponseData{Usage: *result.Usage})
-		}
-
-		if err := conv.Save(); err != nil {
-			log.Error().Err(err).Msg("agent failed to save conversation")
+			total.Add(*result.Usage)
 		}
 	}
 
+	total.Duration = time.Since(runStart)
+	log.Info().
+		Dur("elapsed", total.Duration).
+		Int("total_input_tokens", total.InputTokens).
+		Int("total_output_tokens", total.OutputTokens).
+		Int("total_tool_calls", total.ToolCalls).
+		Str("total_cost", fmt.Sprintf("$%.4f", total.Cost)).
+		Msg("agent.Run done")
+	a.emit(transport.DoneEvent{Text: finalText, Usage: total})
 	return nil
 }
 
@@ -153,7 +166,7 @@ func (a *Agent) executeToolCallLoop(ctx context.Context, toolCalls []types.Conte
 	results := make([]types.ContentBlock, 0, len(toolCalls))
 	summaries := make([]hook.ToolCallSummary, 0, len(toolCalls))
 
-	toolCtx := transport.WithBus(ctx, a.bus)
+	toolCtx := transport.WithSink(ctx, a.sink)
 
 	for _, tc := range toolCalls {
 		input := unmarshalToolInput(tc.ToolInput)
@@ -171,7 +184,7 @@ func (a *Agent) executeToolCallLoop(ctx context.Context, toolCalls []types.Conte
 			}
 		}
 
-		a.bus.Emit(transport.ToolStart, transport.ToolStartData{
+		a.emit(transport.ToolStartEvent{
 			Name:   tc.ToolName,
 			Label:  label,
 			Detail: detail,
@@ -180,7 +193,7 @@ func (a *Agent) executeToolCallLoop(ctx context.Context, toolCalls []types.Conte
 		*counter++
 
 		if err := a.loopDetector.Check(tc.ToolName, tc.ToolInput); err != nil {
-			a.bus.Emit(transport.LoopWarning, transport.LoopWarningData{
+			a.emit(transport.LoopWarningEvent{
 				Name: tc.ToolName, Reason: err.Error(),
 			})
 			results = append(results, types.ToolResultBlock(tc.ToolUseID, err.Error(), true))
@@ -195,7 +208,7 @@ func (a *Agent) executeToolCallLoop(ctx context.Context, toolCalls []types.Conte
 			if isErr {
 				output = err.Error()
 			}
-			a.bus.Emit(transport.ToolEnd, transport.ToolEndData{Name: tc.ToolName, Result: output})
+			a.emit(transport.ToolEndEvent{Name: tc.ToolName, Result: output})
 			results = append(results, types.ToolResultBlock(tc.ToolUseID, output, isErr))
 			summaries = append(summaries, hook.ToolCallSummary{Name: tc.ToolName, Duration: 0, IsErr: isErr})
 			continue
@@ -205,7 +218,7 @@ func (a *Agent) executeToolCallLoop(ctx context.Context, toolCalls []types.Conte
 		toolResult := a.executeTool(toolCtx, tc.ToolName, input)
 		elapsed := time.Since(start)
 
-		a.bus.Emit(transport.ToolEnd, transport.ToolEndData{
+		a.emit(transport.ToolEndEvent{
 			Name: tc.ToolName, Result: toolResult.Output, DurationMs: elapsed.Milliseconds(),
 		})
 
@@ -236,15 +249,16 @@ func (a *Agent) handleAskUser(ctx context.Context, input map[string]any) (string
 		}
 	}
 
+	// The sink delivers AskEvent with a guarantee (it must not be dropped, or
+	// the agent would block here forever). If the run is cancelled the event is
+	// abandoned and the ctx.Done branch below unblocks us.
 	replyCh := make(chan string, 1)
-	if err := a.bus.EmitBlocking(ctx, transport.Ask, transport.AskData{
+	a.emit(transport.AskEvent{
 		Prompt:  question,
 		Kind:    kind,
 		Options: options,
 		ReplyCh: replyCh,
-	}); err != nil {
-		return "", err
-	}
+	})
 
 	select {
 	case resp := <-replyCh:

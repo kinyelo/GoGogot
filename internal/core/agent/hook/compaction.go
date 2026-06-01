@@ -3,9 +3,8 @@ package hook
 import (
 	"context"
 	"fmt"
+	domain "gogogot/internal/domain"
 	"gogogot/internal/llm"
-	types "gogogot/internal/domain"
-	"gogogot/internal/store"
 	"strings"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 const charsPerToken = 4
 
 // EstimateTokens approximates token count from messages (chars / 4).
-func EstimateTokens(messages []store.Turn) int {
+func EstimateTokens(messages []domain.Turn) int {
 	var chars int
 	for _, m := range messages {
 		chars += estimateBlocksChars(m.Content)
@@ -23,7 +22,7 @@ func EstimateTokens(messages []store.Turn) int {
 	return chars / charsPerToken
 }
 
-func estimateBlocksChars(blocks []types.ContentBlock) int {
+func estimateBlocksChars(blocks []domain.ContentBlock) int {
 	var n int
 	for _, b := range blocks {
 		switch b.Type {
@@ -40,7 +39,7 @@ func estimateBlocksChars(blocks []types.ContentBlock) int {
 	return n
 }
 
-func renderTranscript(msgs []store.Turn) string {
+func renderTranscript(msgs []domain.Turn) string {
 	var sb strings.Builder
 	for _, m := range msgs {
 		fmt.Fprintf(&sb, "[%s]: ", m.Role)
@@ -50,7 +49,7 @@ func renderTranscript(msgs []store.Turn) string {
 	return sb.String()
 }
 
-func contentToString(blocks []types.ContentBlock) string {
+func contentToString(blocks []domain.ContentBlock) string {
 	var sb strings.Builder
 	for _, b := range blocks {
 		switch b.Type {
@@ -94,15 +93,17 @@ func (c *Compaction) shouldCompact(estimatedTokens, contextWindow int) bool {
 	return adjusted > limit
 }
 
-// BeforeHook returns a BeforeIterationFunc that compacts conversation messages
-// when they exceed the context window threshold.
+// BeforeHook returns a BeforeIterationFunc that compacts the working set of
+// messages when they exceed the context window threshold. It rewrites
+// ic.Messages in place and sets ic.Compacted; the agent emits the resulting
+// CompactionEvent and the orchestrator persists the new history.
 func (c *Compaction) BeforeHook() BeforeIterationFunc {
 	return func(ctx context.Context, ic *IterationContext) {
-		if ic.ContextWindow <= 0 || ic.Conversation == nil || ic.LLM == nil {
+		if ic.ContextWindow <= 0 || ic.LLM == nil {
 			return
 		}
 
-		msgs := ic.Conversation.Messages()
+		msgs := ic.Messages
 		estimated := EstimateTokens(msgs)
 		if !c.shouldCompact(estimated, ic.ContextWindow) {
 			return
@@ -126,7 +127,7 @@ func (c *Compaction) BeforeHook() BeforeIterationFunc {
 		transcript := renderTranscript(old)
 		prompt := c.SummaryPrompt + "\n\n---\n\n" + transcript
 
-		resp, err := ic.LLM.Call(ctx, []types.Message{types.NewUserMessage(types.TextBlock(prompt))}, llm.CallOptions{
+		resp, err := ic.LLM.Call(ctx, []domain.Message{domain.NewUserMessage(domain.TextBlock(prompt))}, llm.CallOptions{
 			System:  c.SummaryPrompt,
 			NoTools: true,
 		})
@@ -134,21 +135,19 @@ func (c *Compaction) BeforeHook() BeforeIterationFunc {
 			log.Error().Err(err).Msg("compaction summarize failed")
 			return
 		}
-		summary := types.ExtractText(resp.Content)
+		summary := domain.ExtractText(resp.Content)
 
-		compacted := make([]store.Turn, 0, 1+len(recent))
-		compacted = append(compacted, store.Turn{
-			Role:      string(types.RoleUser),
-			Content:   []types.ContentBlock{types.TextBlock(fmt.Sprintf("[Context Summary]\n%s", summary))},
+		compacted := make([]domain.Turn, 0, 1+len(recent))
+		compacted = append(compacted, domain.Turn{
+			Role:      string(domain.RoleUser),
+			Content:   []domain.ContentBlock{domain.TextBlock(fmt.Sprintf("[Context Summary]\n%s", summary))},
 			Timestamp: time.Now(),
 			Metadata:  map[string]any{"compacted": true, "original_messages": len(old)},
 		})
 		compacted = append(compacted, recent...)
 
-		if err := ic.Conversation.ReplaceMessages(compacted); err != nil {
-			log.Error().Err(err).Msg("compaction rewrite failed")
-			return
-		}
+		ic.Messages = compacted
+		ic.Compacted = true
 
 		after := EstimateTokens(compacted)
 		log.Info().Int("before", estimated).Int("after", after).Msg("compaction done")

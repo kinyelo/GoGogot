@@ -37,8 +37,8 @@ func main() {
 	fmt.Println("\nDone!")
 }
 
-func emit(ch chan<- transport.Event, kind transport.Kind, data any) {
-	ch <- transport.Event{Timestamp: time.Now(), Kind: kind, Data: data}
+func emit(ch chan<- transport.Event, ev transport.Event) {
+	ch <- ev
 }
 
 func pct(v int) *int { return &v }
@@ -47,8 +47,8 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 	fmt.Println(">>> Progress demo")
 	events := make(chan transport.Event, 50)
 
-	plan := func(tasks []transport.PlanTask, percent int, status string) transport.ProgressData {
-		return transport.ProgressData{Tasks: tasks, Percent: pct(percent), Status: status}
+	plan := func(tasks []transport.PlanTask, percent int, status string) transport.ProgressEvent {
+		return transport.ProgressEvent{Tasks: tasks, Percent: pct(percent), Status: status}
 	}
 
 	go func() {
@@ -56,12 +56,12 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 		step := 3 * time.Second
 
 		// 1) Thinking
-		emit(events, transport.LLMStart, nil)
+		emit(events, transport.LLMStartEvent{})
 		fmt.Println("    [thinking]")
 		time.Sleep(step)
 
 		// 2) Tool: analyzing codebase
-		emit(events, transport.ToolStart, transport.ToolStartData{
+		emit(events, transport.ToolStartEvent{
 			Name: "file_read", Label: "Reading files", Detail: "Analyzing codebase structure",
 		})
 		fmt.Println("    [tool: file_read]")
@@ -75,12 +75,12 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 			{Title: "Update configuration", Status: transport.TaskPending},
 			{Title: "Run linter & build", Status: transport.TaskPending},
 		}
-		emit(events, transport.Progress, plan(tasks, 0, "Analyzing existing code"))
+		emit(events, plan(tasks, 0, "Analyzing existing code"))
 		fmt.Println("    [plan 0%]")
 		time.Sleep(step)
 
 		// 4) 10%
-		emit(events, transport.Progress, plan(tasks, 10, "Reading source files"))
+		emit(events, plan(tasks, 10, "Reading source files"))
 		fmt.Println("    [plan 10%]")
 		time.Sleep(step)
 
@@ -92,24 +92,24 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 			{Title: "Update configuration", Status: transport.TaskPending},
 			{Title: "Run linter & build", Status: transport.TaskPending},
 		}
-		emit(events, transport.Progress, plan(tasks, 20, "Implementing handler"))
+		emit(events, plan(tasks, 20, "Implementing handler"))
 		fmt.Println("    [plan 20%]")
 		time.Sleep(step)
 
 		// 6) Tool: editing file
-		emit(events, transport.ToolStart, transport.ToolStartData{
+		emit(events, transport.ToolStartEvent{
 			Name: "file_edit", Label: "Editing file", Detail: "internal/api/handler.go",
 		})
 		fmt.Println("    [tool: file_edit]")
 		time.Sleep(step)
 
 		// 7) 40%
-		emit(events, transport.Progress, plan(tasks, 40, "Handler implementation in progress"))
+		emit(events, plan(tasks, 40, "Handler implementation in progress"))
 		fmt.Println("    [plan 40%]")
 		time.Sleep(step)
 
 		// 8) Message: success
-		emit(events, transport.Message, transport.MessageData{
+		emit(events, transport.MidMessageEvent{
 			Text: "Handler created successfully", Level: transport.LevelSuccess,
 		})
 		fmt.Println("    [message: success]")
@@ -123,19 +123,19 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 			{Title: "Update configuration", Status: transport.TaskPending},
 			{Title: "Run linter & build", Status: transport.TaskPending},
 		}
-		emit(events, transport.Progress, plan(tasks, 50, "Writing tests"))
+		emit(events, plan(tasks, 50, "Writing tests"))
 		fmt.Println("    [plan 50%]")
 		time.Sleep(step)
 
 		// 10) Tool: writing test file
-		emit(events, transport.ToolStart, transport.ToolStartData{
+		emit(events, transport.ToolStartEvent{
 			Name: "file_edit", Label: "Editing file", Detail: "internal/api/handler_test.go",
 		})
 		fmt.Println("    [tool: file_edit test]")
 		time.Sleep(step)
 
 		// 11) 65%
-		emit(events, transport.Progress, plan(tasks, 65, "Tests written"))
+		emit(events, plan(tasks, 65, "Tests written"))
 		fmt.Println("    [plan 65%]")
 		time.Sleep(step)
 
@@ -147,12 +147,12 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 			{Title: "Update configuration", Status: transport.TaskInProgress},
 			{Title: "Run linter & build", Status: transport.TaskPending},
 		}
-		emit(events, transport.Progress, plan(tasks, 75, "Updating config"))
+		emit(events, plan(tasks, 75, "Updating config"))
 		fmt.Println("    [plan 75%]")
 		time.Sleep(step)
 
 		// 13) Message: warning
-		emit(events, transport.Message, transport.MessageData{
+		emit(events, transport.MidMessageEvent{
 			Text: "Deprecated config key detected, migrating automatically", Level: transport.LevelWarning,
 		})
 		fmt.Println("    [message: warning]")
@@ -166,19 +166,19 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 			{Title: "Update configuration", Status: transport.TaskCompleted},
 			{Title: "Run linter & build", Status: transport.TaskInProgress},
 		}
-		emit(events, transport.Progress, plan(tasks, 85, "Running go build"))
+		emit(events, plan(tasks, 85, "Running go build"))
 		fmt.Println("    [plan 85%]")
 		time.Sleep(step)
 
 		// 15) Tool: shell
-		emit(events, transport.ToolStart, transport.ToolStartData{
+		emit(events, transport.ToolStartEvent{
 			Name: "shell_exec", Label: "Running command", Detail: "go test ./...",
 		})
 		fmt.Println("    [tool: shell go test]")
 		time.Sleep(step)
 
 		// 16) 95%
-		emit(events, transport.Progress, plan(tasks, 95, "Tests passing"))
+		emit(events, plan(tasks, 95, "Tests passing"))
 		fmt.Println("    [plan 95%]")
 		time.Sleep(step)
 
@@ -190,12 +190,12 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 			{Title: "Update configuration", Status: transport.TaskCompleted},
 			{Title: "Run linter & build", Status: transport.TaskCompleted},
 		}
-		emit(events, transport.Progress, plan(tasks, 100, "All tasks completed"))
+		emit(events, plan(tasks, 100, "All tasks completed"))
 		fmt.Println("    [plan 100%]")
 		time.Sleep(step)
 
 		// 18) Message: info
-		emit(events, transport.Message, transport.MessageData{
+		emit(events, transport.MidMessageEvent{
 			Text: "3 files changed, 247 insertions, 12 deletions", Level: transport.LevelInfo,
 		})
 		fmt.Println("    [message: info]")
@@ -219,10 +219,10 @@ func scenarioProgress(ctx context.Context, reply transport.Replier) {
 			"}\n```\n\n" +
 			"All **8 tests** passing. Build clean, no linter warnings. ✅"
 
-		emit(events, transport.LLMStream, transport.LLMStreamData{Text: finalMD})
+		emit(events, transport.LLMStreamEvent{Text: finalMD})
 		fmt.Println("    [final text]")
 		time.Sleep(300 * time.Millisecond)
-		emit(events, transport.Done, transport.DoneData{})
+		emit(events, transport.DoneEvent{})
 	}()
 
 	reply.ConsumeEvents(ctx, events, nil)

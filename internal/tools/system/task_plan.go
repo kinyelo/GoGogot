@@ -237,8 +237,8 @@ func TaskPlanTool(tp *TaskPlan) types.Tool {
 			}
 
 			if !result.IsErr {
-				if bus, ok := transport.BusFromContext(ctx); ok {
-					bus.Emit(transport.Progress, transport.ProgressData{Tasks: tp.Snapshot()})
+				if sink, ok := transport.SinkFromContext(ctx); ok {
+					sink.Emit(transport.ProgressEvent{Tasks: tp.Snapshot()})
 				}
 			}
 			return result

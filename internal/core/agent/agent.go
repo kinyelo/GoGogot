@@ -20,7 +20,7 @@ type Agent struct {
 	loopDetector *hook.LoopDetector
 	beforeHooks  []hook.BeforeIterationFunc
 	afterHooks   []hook.AfterIterationFunc
-	bus          *transport.Bus
+	sink         transport.Sink
 }
 
 func New(client llm.LLM, instructions func() string, registry *tools.Registry) *Agent {
@@ -62,6 +62,12 @@ func (a *Agent) AddAfterHook(fn hook.AfterIterationFunc) {
 
 func (a *Agent) ModelLabel() string {
 	return a.client.ModelLabel()
+}
+
+// emit sends an event to the run's sink. The sink (the orchestrator) decides
+// what to persist and what to forward to the UI.
+func (a *Agent) emit(ev transport.Event) {
+	a.sink.Emit(ev)
 }
 
 func (a *Agent) runBeforeHooks(ctx context.Context, ic *hook.IterationContext) {

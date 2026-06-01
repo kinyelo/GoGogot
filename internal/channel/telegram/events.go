@@ -11,21 +11,21 @@ const (
 	thinkingDelay   = 10 * time.Second
 )
 
-func buildToolStatus(d transport.ToolStartData, plan []transport.PlanTask) transport.AgentStatus {
-	label := d.Label
+func buildToolStatus(e transport.ToolStartEvent, plan []transport.PlanTask) transport.AgentStatus {
+	label := e.Label
 	if label == "" {
-		label = d.Name
+		label = e.Name
 	}
-	if d.Detail != "" {
-		label = label + ": " + d.Detail
+	if e.Detail != "" {
+		label = label + ": " + e.Detail
 	}
 
-	phase := transport.Phase(d.Phase)
+	phase := transport.Phase(e.Phase)
 	if phase == "" {
 		phase = transport.PhaseTool
 	}
 
-	return transport.AgentStatus{Phase: phase, Tool: d.Name, Detail: label, Plan: plan}
+	return transport.AgentStatus{Phase: phase, Tool: e.Name, Detail: label, Plan: plan}
 }
 
 func formatMessageWithLevel(text string, level transport.MessageLevel) string {
@@ -44,7 +44,6 @@ func (r *replier) ConsumeEvents(ctx context.Context, events <-chan transport.Eve
 	statusID := r.sendStatus(ctx, transport.AgentStatus{Phase: transport.PhaseThinking})
 
 	var (
-		finalText   string
 		currentPlan []transport.PlanTask
 
 		pending      *transport.AgentStatus
@@ -125,94 +124,93 @@ func (r *replier) ConsumeEvents(ctx context.Context, events <-chan transport.Eve
 		select {
 		case ev, ok := <-events:
 			if !ok {
+				// Channel closed without a terminal Done/Error — the run was
+				// cancelled. Clean up the dangling status message.
+				if statusID != 0 {
+					r.deleteStatus(context.Background(), statusID)
+				}
 				return ""
 			}
 
-			switch ev.Kind {
-			case transport.LLMStart:
+			switch e := ev.(type) {
+			case transport.LLMStartEvent:
 				if hadTool {
 					cancelThinking()
 					thinkTimer = time.NewTimer(thinkingDelay)
 					thinkCh = thinkTimer.C
 				}
 
-			case transport.LLMStream:
-				if d, ok := ev.Data.(transport.LLMStreamData); ok {
-					finalText = d.Text
-				}
+			case transport.LLMStreamEvent:
+				// Reserved for live token streaming. The authoritative final
+				// text arrives in DoneEvent.Text, so nothing to render here yet.
 
-			case transport.ToolStart:
+			case transport.ToolStartEvent:
 				hadTool = true
 				cancelThinking()
-				d, _ := ev.Data.(transport.ToolStartData)
-				schedule(buildToolStatus(d, currentPlan))
+				schedule(buildToolStatus(e, currentPlan))
 
-			case transport.Progress:
+			case transport.ProgressEvent:
 				cancelThinking()
-				d, _ := ev.Data.(transport.ProgressData)
-				if d.Tasks != nil {
-					currentPlan = d.Tasks
+				if e.Tasks != nil {
+					currentPlan = e.Tasks
 				}
 				schedule(transport.AgentStatus{
 					Phase:   transport.PhaseWorking,
 					Plan:    currentPlan,
-					Detail:  d.Status,
-					Percent: d.Percent,
+					Detail:  e.Status,
+					Percent: e.Percent,
 				})
 
-			case transport.Message:
-			cancelThinking()
-			flush()
-			d, _ := ev.Data.(transport.MessageData)
-			_ = r.SendText(ctx, formatMessageWithLevel(d.Text, d.Level))
-
-			case transport.Ask:
+			case transport.MidMessageEvent:
+				cancelThinking()
 				flush()
-				d, _ := ev.Data.(transport.AskData)
+				_ = r.SendText(ctx, formatMessageWithLevel(e.Text, e.Level))
+
+			case transport.AskEvent:
+				flush()
 				if statusID != 0 {
 					r.deleteStatus(ctx, statusID)
 				}
-				_ = r.SendAsk(ctx, d.Prompt, d.Kind, d.Options)
+				_ = r.SendAsk(ctx, e.Prompt, e.Kind, e.Options)
 
 				if replyInbox != nil {
 					select {
 					case resp := <-replyInbox:
-						if d.ReplyCh != nil {
-							d.ReplyCh <- resp
+						if e.ReplyCh != nil {
+							e.ReplyCh <- resp
 						}
 					case <-ctx.Done():
-						if d.ReplyCh != nil {
-							close(d.ReplyCh)
+						if e.ReplyCh != nil {
+							close(e.ReplyCh)
 						}
 						return ""
 					}
 				} else {
-					if d.ReplyCh != nil {
-						d.ReplyCh <- "(no interactive input available)"
+					if e.ReplyCh != nil {
+						e.ReplyCh <- "(no interactive input available)"
 					}
 				}
 				statusID = restoreStatus()
 				lastText = ""
 				lastEditTime = time.Time{}
 
-			case transport.Error:
+			case transport.ErrorEvent:
 				if ctx.Err() != nil {
 					return ""
 				}
-				d, _ := ev.Data.(transport.ErrorData)
 				if statusID != 0 {
 					r.deleteStatus(ctx, statusID)
 				}
-				_ = r.SendText(ctx, "Error: "+d.Error)
+				_ = r.SendText(ctx, "Error: "+e.Error)
 				return ""
 
-			case transport.Done:
+			case transport.DoneEvent:
 				if ctx.Err() != nil {
 					r.deleteStatus(context.Background(), statusID)
 					return ""
 				}
-				if finalText != "" {
-					r.editToFinal(context.Background(), statusID, finalText)
+				if e.Text != "" {
+					r.editToFinal(context.Background(), statusID, e.Text)
 				} else {
 					r.deleteStatus(context.Background(), statusID)
 				}

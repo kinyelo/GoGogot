@@ -2,7 +2,7 @@ package transport
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 )
@@ -21,30 +21,27 @@ func NewBus(size int) (*Bus, <-chan Event) {
 }
 
 // Emit sends an event without blocking. If the channel is full the event
-// is dropped and a warning is logged.
-func (b *Bus) Emit(kind Kind, data any) {
+// is dropped and a warning is logged. Use only for UI events that tolerate
+// loss; persistent events must go through a guaranteed path.
+func (b *Bus) Emit(ev Event) {
 	if b == nil || b.ch == nil {
 		return
 	}
 	select {
-	case b.ch <- Event{
-		Timestamp: time.Now(),
-		Kind:      kind,
-		Data:      data,
-	}:
+	case b.ch <- ev:
 	default:
-		log.Warn().Any("kind", kind).Msg("event dropped — bus full")
+		log.Warn().Str("event", fmt.Sprintf("%T", ev)).Msg("event dropped — bus full")
 	}
 }
 
 // EmitBlocking sends an event, blocking until it is delivered or the context
 // is cancelled. Use for events that must not be dropped (e.g. Ask).
-func (b *Bus) EmitBlocking(ctx context.Context, kind Kind, data any) error {
+func (b *Bus) EmitBlocking(ctx context.Context, ev Event) error {
 	if b == nil || b.ch == nil {
 		return context.Canceled
 	}
 	select {
-	case b.ch <- Event{Timestamp: time.Now(), Kind: kind, Data: data}:
+	case b.ch <- ev:
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()

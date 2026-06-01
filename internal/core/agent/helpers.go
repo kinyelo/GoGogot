@@ -2,10 +2,7 @@ package agent
 
 import (
 	"encoding/json"
-	"gogogot/internal/core/agent/hook"
 	types "gogogot/internal/domain"
-	"gogogot/internal/store"
-	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -16,16 +13,9 @@ type parsedResponse struct {
 	textContent     string
 }
 
-func appendUserMessage(conv hook.Conversation, userBlocks []types.ContentBlock) {
-	conv.AppendMessage(store.Turn{
-		Role:      string(types.RoleUser),
-		Content:   userBlocks,
-		Timestamp: time.Now(),
-	})
-}
-
-func buildLLMMessages(conv hook.Conversation) []types.Message {
-	turns := conv.Messages()
+// buildLLMMessages projects the agent's working set of turns into the message
+// form the LLM client expects.
+func buildLLMMessages(turns []types.Turn) []types.Message {
 	msgs := make([]types.Message, 0, len(turns))
 	for _, t := range turns {
 		role := types.RoleUser
@@ -61,4 +51,3 @@ func unmarshalToolInput(raw json.RawMessage) map[string]any {
 	}
 	return input
 }
-

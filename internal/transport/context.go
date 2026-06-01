@@ -13,13 +13,15 @@ func ReplierFromContext(ctx context.Context) (Replier, bool) {
 	return r, ok
 }
 
-type busKey struct{}
+type sinkKey struct{}
 
-func WithBus(ctx context.Context, b *Bus) context.Context {
-	return context.WithValue(ctx, busKey{}, b)
+// WithSink attaches the agent's event sink to the context so tools running deep
+// in the call stack can emit progress/status events without a direct reference.
+func WithSink(ctx context.Context, s Sink) context.Context {
+	return context.WithValue(ctx, sinkKey{}, s)
 }
 
-func BusFromContext(ctx context.Context) (*Bus, bool) {
-	b, ok := ctx.Value(busKey{}).(*Bus)
-	return b, ok
+func SinkFromContext(ctx context.Context) (Sink, bool) {
+	s, ok := ctx.Value(sinkKey{}).(Sink)
+	return s, ok
 }

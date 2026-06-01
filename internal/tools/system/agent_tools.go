@@ -38,8 +38,8 @@ func reportStatusTool() types.Tool {
 				i := int(v)
 				pct = &i
 			}
-			if bus, ok := transport.BusFromContext(ctx); ok {
-				bus.Emit(transport.Progress, transport.ProgressData{Status: text, Percent: pct})
+			if sink, ok := transport.SinkFromContext(ctx); ok {
+				sink.Emit(transport.ProgressEvent{Status: text, Percent: pct})
 			}
 			return types.Result{Output: "status updated"}
 		},
@@ -66,8 +66,8 @@ func sendMessageTool() types.Tool {
 		Handler: func(ctx context.Context, input map[string]any) types.Result {
 			text, _ := input["text"].(string)
 			level, _ := input["level"].(string)
-			if bus, ok := transport.BusFromContext(ctx); ok {
-				bus.Emit(transport.Message, transport.MessageData{
+			if sink, ok := transport.SinkFromContext(ctx); ok {
+				sink.Emit(transport.MidMessageEvent{
 					Text:  text,
 					Level: transport.MessageLevel(level),
 				})

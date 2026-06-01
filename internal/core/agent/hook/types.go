@@ -2,39 +2,34 @@ package hook
 
 import (
 	"context"
-	"fmt"
+	domain "gogogot/internal/domain"
 	"gogogot/internal/llm"
-	types "gogogot/internal/domain"
-	"gogogot/internal/store"
 	"time"
 )
 
-// Conversation is the agent's view of a conversation store.
-// Decouples the agent loop from the concrete store.Chat implementation.
-type Conversation interface {
-	fmt.Stringer
-	Messages() []store.Turn
-	AppendMessage(store.Turn)
-	ReplaceMessages([]store.Turn) error
-	TotalUsage() *store.Usage
-	Save() error
-}
-
+// IterationContext is the per-iteration view passed to hooks. It holds the
+// agent's mutable working set of turns — NOT a reference to the chat/store — so
+// hooks stay pure: the compaction hook rewrites Messages in place and the agent
+// turns that into a persistence event. This is what lets the agent avoid any
+// dependency on the store.
 type IterationContext struct {
 	Iteration     int
 	Model         string
 	System        string
-	Messages      []types.Message
-	Conversation  Conversation
+	Messages      []domain.Turn // mutable; the compaction hook may rewrite this
 	ContextWindow int
 	LLM           llm.LLM
+
+	// Compacted is set by the compaction hook when it rewrote Messages. The
+	// agent reads it to emit a CompactionEvent carrying the new history.
+	Compacted bool
 }
 
 type IterationResult struct {
-	Response    *types.Response
+	Response    *domain.Response
 	LLMDuration time.Duration
 	ToolCalls   []ToolCallSummary
-	Usage       *store.Usage
+	Usage       *domain.Usage
 }
 
 type ToolCallSummary struct {
