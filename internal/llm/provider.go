@@ -25,16 +25,19 @@ type Provider struct {
 
 var aliases = map[string]string{
 	"claude":   "claude-sonnet-4-6",
-	"deepseek": "deepseek/deepseek-v3.2",
+	"deepseek": "deepseek/deepseek-v4-flash",
 	"gemini":   "google/gemini-3-flash-preview",
+	"grok":     "x-ai/grok-build-0.1",
 	"minimax":  "minimax/minimax-m2.5",
-	"qwen":     "qwen/qwen3.5-397b-a17b",
+	"qwen":     "qwen/qwen3.7-max",
 	"llama":    "meta-llama/llama-4-maverick",
 	"kimi":     "moonshotai/kimi-k2.5",
 	"openai":   "openai/gpt-5-nano",
 }
 
 var anthropicToOpenRouter = map[string]string{
+	"claude-opus-4-8":   "anthropic/claude-opus-4.8",
+	"claude-opus-4-7":   "anthropic/claude-opus-4.7",
 	"claude-opus-4-6":   "anthropic/claude-opus-4.6",
 	"claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
 	"claude-opus-4-5":   "anthropic/claude-opus-4.5",
