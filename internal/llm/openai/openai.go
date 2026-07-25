@@ -21,11 +21,16 @@ type Adapter struct {
 
 func NewAdapter(baseURL, apiKey string, supportsVision bool) *Adapter {
 	httpClient := &http.Client{Timeout: 5 * time.Minute}
-	c := openai.NewClient(
+
+	opts := []oaioption.RequestOption{
 		oaioption.WithBaseURL(baseURL),
 		oaioption.WithAPIKey(apiKey),
 		oaioption.WithHTTPClient(httpClient),
-	)
+	}
+
+	c := openai.Client{Options: opts}
+	c.Chat = openai.NewChatCompletionService(opts...)
+
 	return &Adapter{client: &c, supportsVision: supportsVision}
 }
 

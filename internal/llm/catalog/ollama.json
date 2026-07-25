@@ -1,0 +1,50 @@
+[
+  {
+    "id": "qwen3.6",
+    "label": "Qwen 3.6",
+    "context_window": 131072,
+    "vision": true,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "qwen3.6:32b",
+    "label": "Qwen 3.6 (32B)",
+    "context_window": 131072,
+    "vision": true,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "llama4",
+    "label": "Llama 4",
+    "context_window": 131072,
+    "vision": true,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "llama3.3",
+    "label": "Llama 3.3",
+    "context_window": 131072,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "mistral",
+    "label": "Mistral",
+    "context_window": 32768,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "deepseek-r1",
+    "label": "DeepSeek R1",
+    "context_window": 131072,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  }
+]

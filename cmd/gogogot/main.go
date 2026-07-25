@@ -10,6 +10,7 @@ import (
 
 	"github.com/aspasskiy/gogogot/internal/channel"
 	"github.com/aspasskiy/gogogot/internal/channel/telegram"
+	"github.com/aspasskiy/gogogot/internal/channel/whisper"
 	"github.com/aspasskiy/gogogot/internal/config"
 	"github.com/aspasskiy/gogogot/internal/core"
 	"github.com/aspasskiy/gogogot/internal/core/agent"
@@ -132,10 +133,13 @@ func buildEngine(cfg *config.Config, ch channel.Channel) (*core.Engine, error) {
 
 func resolveProvider(cfg *config.Config) (*llm.Provider, error) {
 	if cfg.LLM.Provider == "" {
-		return nil, fmt.Errorf("GOGOGOT_PROVIDER is required — set to 'anthropic', 'openai', or 'openrouter'")
+		return nil, fmt.Errorf("GOGOGOT_PROVIDER is required — set to 'anthropic', 'openai', 'openrouter', or 'ollama'")
 	}
 	if cfg.LLM.Model == "" {
 		return nil, fmt.Errorf("GOGOGOT_MODEL is required — use an exact model ID (e.g. claude-sonnet-4-6, gpt-4o) or an OpenRouter slug (vendor/model)")
+	}
+	if cfg.LLM.Provider == "ollama" {
+		return llm.ResolveOllama(cfg.LLM.Model, cfg.LLM.OllamaBaseURL)
 	}
 	return llm.ResolveProvider(cfg.LLM.Model, cfg.LLM.Provider)
 }
@@ -150,6 +154,10 @@ func buildChannel(cfg *config.Config) (channel.Channel, error) {
 			return nil, fmt.Errorf("TELEGRAM_OWNER_ID is required for telegram transport")
 		}
 		return telegram.New(cfg.Telegram.Token, cfg.Telegram.OwnerID)
+
+	case "whisper":
+		return whisper.New(cfg.Whisper.BaseURL, cfg.Whisper.Username, cfg.Whisper.Password, cfg.Whisper.OwnerID)
+
 	default:
 		return nil, fmt.Errorf("unknown transport: %s", cfg.Transport)
 	}

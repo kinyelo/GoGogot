@@ -33,6 +33,7 @@ var aliases = map[string]string{
 	"llama":    "meta-llama/llama-4-maverick",
 	"kimi":     "moonshotai/kimi-k2.5",
 	"openai":   "openai/gpt-5-nano",
+	"ollama":   "qwen3.6",
 }
 
 var anthropicToOpenRouter = map[string]string{
@@ -56,6 +57,9 @@ var (
 
 	openrouterOnce    sync.Once
 	openrouterCatalog map[string]catalog.ModelDef
+
+	ollamaOnce    sync.Once
+	ollamaCatalog map[string]catalog.ModelDef
 )
 
 func getAnthropicCatalog() map[string]catalog.ModelDef {
@@ -71,6 +75,11 @@ func getOpenAICatalog() map[string]catalog.ModelDef {
 func getOpenRouterCatalog() map[string]catalog.ModelDef {
 	openrouterOnce.Do(func() { openrouterCatalog = catalog.OpenRouter() })
 	return openrouterCatalog
+}
+
+func getOllamaCatalog() map[string]catalog.ModelDef {
+	ollamaOnce.Do(func() { ollamaCatalog = catalog.Ollama() })
+	return ollamaCatalog
 }
 
 // ResolveProvider builds a Provider from an exact model ID and provider name.
@@ -114,8 +123,29 @@ func ResolveProvider(modelID, provider string) (*Provider, error) {
 		return resolveOpenRouter(modelID, modelID)
 
 	default:
-		return nil, fmt.Errorf("unknown provider %q — use 'anthropic', 'openai', or 'openrouter'", provider)
+		return nil, fmt.Errorf("unknown provider %q — use 'anthropic', 'openai', 'openrouter', or 'ollama'", provider)
 	}
+}
+
+// ResolveOllama builds a Provider for a local Ollama model.
+// Ollama serves an OpenAI-compatible API, so Format is "openai".
+func ResolveOllama(model, baseURL string) (*Provider, error) {
+	p := &Provider{
+		ID: model, Label: model, Model: model,
+		BaseURL:         baseURL,
+		Format:          "openai",
+		ContextWindow:   4096,
+		InputPricePerM:  0,
+		OutputPricePerM: 0,
+	}
+
+	if def, ok := getOllamaCatalog()[model]; ok {
+		p.Label = def.Label
+		p.ContextWindow = def.ContextWindow
+		p.SupportsVision = def.Vision
+	}
+
+	return p, nil
 }
 
 func resolveAnthropic(model string) (*Provider, error) {
