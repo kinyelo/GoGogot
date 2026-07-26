@@ -1,0 +1,266 @@
+[
+  {
+    "id": "claude-opus-4-8",
+    "label": "Claude Opus 4.8",
+    "context_window": 1000000,
+    "vision": true,
+    "input_price_per_m": 5.0,
+    "output_price_per_m": 25.0
+  },
+  {
+    "id": "claude-opus-4-7",
+    "label": "Claude Opus 4.7",
+    "context_window": 1000000,
+    "vision": true,
+    "input_price_per_m": 5.0,
+    "output_price_per_m": 25.0
+  },
+  {
+    "id": "claude-opus-4-6",
+    "label": "Claude Opus 4.6",
+    "context_window": 1000000,
+    "vision": true,
+    "input_price_per_m": 5.0,
+    "output_price_per_m": 25.0
+  },
+  {
+    "id": "claude-opus-4-5",
+    "label": "Claude Opus 4.5",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 5.0,
+    "output_price_per_m": 25.0
+  },
+  {
+    "id": "claude-sonnet-4-6",
+    "label": "Claude Sonnet 4.6",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 3.0,
+    "output_price_per_m": 15.0
+  },
+  {
+    "id": "claude-sonnet-4-5",
+    "label": "Claude Sonnet 4.5",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 3.0,
+    "output_price_per_m": 15.0
+  },
+  {
+    "id": "claude-haiku-4-5",
+    "label": "Claude Haiku 4.5",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 1.0,
+    "output_price_per_m": 5.0
+  },
+  {
+    "id": "claude-fable-5",
+    "label": "Claude Fable 5",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 10.0,
+    "output_price_per_m": 50.0
+  },
+  {
+    "id": "claude-opus-5",
+    "label": "Claude Opus 5",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 5.0,
+    "output_price_per_m": 25.0
+  },
+  {
+    "id": "claude-sonnet-5",
+    "label": "Claude Sonnet 5",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 2.0,
+    "output_price_per_m": 10.0
+  },
+  {
+    "id": "deepseek-v4-pro",
+    "label": "DeepSeek V4 Pro",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 1.74,
+    "output_price_per_m": 3.48
+  },
+  {
+    "id": "deepseek-v4-flash",
+    "label": "DeepSeek V4 Flash",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.14,
+    "output_price_per_m": 0.28
+  },
+  {
+    "id": "deepseek-v4-flash-free",
+    "label": "DeepSeek V4 Flash Free",
+    "context_window": 128000,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "grok-4.5",
+    "label": "Grok 4.5",
+    "context_window": 200000,
+    "vision": true,
+    "input_price_per_m": 2.0,
+    "output_price_per_m": 6.0
+  },
+  {
+    "id": "grok-build-0.1",
+    "label": "Grok Build 0.1",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 1.0,
+    "output_price_per_m": 2.0
+  },
+  {
+    "id": "qwen3.7-max",
+    "label": "Qwen3.7 Max",
+    "context_window": 256000,
+    "vision": true,
+    "input_price_per_m": 2.50,
+    "output_price_per_m": 7.50
+  },
+  {
+    "id": "qwen3.7-plus",
+    "label": "Qwen3.7 Plus",
+    "context_window": 256000,
+    "vision": true,
+    "input_price_per_m": 0.40,
+    "output_price_per_m": 1.60
+  },
+  {
+    "id": "qwen3.6-plus",
+    "label": "Qwen3.6 Plus",
+    "context_window": 256000,
+    "vision": true,
+    "input_price_per_m": 0.50,
+    "output_price_per_m": 3.0
+  },
+  {
+    "id": "minimax-m3",
+    "label": "MiniMax M3",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.30,
+    "output_price_per_m": 1.20
+  },
+  {
+    "id": "minimax-m2.7",
+    "label": "MiniMax M2.7",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.30,
+    "output_price_per_m": 1.20
+  },
+  {
+    "id": "minimax-m2.5",
+    "label": "MiniMax M2.5",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.30,
+    "output_price_per_m": 1.20
+  },
+  {
+    "id": "glm-5.2",
+    "label": "GLM-5.2",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 1.40,
+    "output_price_per_m": 4.40
+  },
+  {
+    "id": "glm-5.1",
+    "label": "GLM-5.1",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 1.40,
+    "output_price_per_m": 4.40
+  },
+  {
+    "id": "glm-5",
+    "label": "GLM-5",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 1.0,
+    "output_price_per_m": 3.20
+  },
+  {
+    "id": "kimi-k2.5",
+    "label": "Kimi K2.5",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.60,
+    "output_price_per_m": 3.0
+  },
+  {
+    "id": "kimi-k2.6",
+    "label": "Kimi K2.6",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.95,
+    "output_price_per_m": 4.0
+  },
+  {
+    "id": "kimi-k2.7-code",
+    "label": "Kimi K2.7 Code",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.95,
+    "output_price_per_m": 4.0
+  },
+  {
+    "id": "mimo-v2.5",
+    "label": "MiMo-V2.5",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.14,
+    "output_price_per_m": 0.28
+  },
+  {
+    "id": "mimo-v2.5-pro",
+    "label": "MiMo-V2.5-Pro",
+    "context_window": 128000,
+    "vision": true,
+    "input_price_per_m": 0.435,
+    "output_price_per_m": 0.87
+  },
+  {
+    "id": "mimo-v2.5-free",
+    "label": "MiMo-V2.5 Free",
+    "context_window": 128000,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "big-pickle",
+    "label": "Big Pickle",
+    "context_window": 128000,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "nemotron-3-ultra-free",
+    "label": "Nemotron 3 Ultra Free",
+    "context_window": 128000,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  },
+  {
+    "id": "north-mini-code-free",
+    "label": "North Mini Code Free",
+    "context_window": 128000,
+    "vision": false,
+    "input_price_per_m": 0,
+    "output_price_per_m": 0
+  }
+]

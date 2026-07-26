@@ -22,7 +22,7 @@ type WhisperConfig struct {
 
 type LLMConfig struct {
 	Model         string
-	Provider      string // "anthropic", "openai", "openrouter", or "ollama"
+	Provider      string // "anthropic", "openai", "openrouter", "ollama", "opencode", or "opencode-go"
 	OllamaBaseURL string
 	MaxTokens     int
 	Timeout       time.Duration // per-LLM-call timeout (GOGOGOT_LLM_TIMEOUT; 0 -> 3m default)

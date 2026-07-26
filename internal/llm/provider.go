@@ -24,16 +24,18 @@ type Provider struct {
 }
 
 var aliases = map[string]string{
-	"claude":   "claude-sonnet-4-6",
-	"deepseek": "deepseek/deepseek-v4-flash",
-	"gemini":   "google/gemini-3-flash-preview",
-	"grok":     "x-ai/grok-build-0.1",
-	"minimax":  "minimax/minimax-m2.5",
-	"qwen":     "qwen/qwen3.7-max",
-	"llama":    "meta-llama/llama-4-maverick",
-	"kimi":     "moonshotai/kimi-k2.5",
-	"openai":   "openai/gpt-5-nano",
-	"ollama":   "qwen3.6",
+	"claude":      "claude-sonnet-4-6",
+	"deepseek":    "deepseek/deepseek-v4-flash",
+	"gemini":      "google/gemini-3-flash-preview",
+	"grok":        "x-ai/grok-build-0.1",
+	"minimax":     "minimax/minimax-m2.5",
+	"qwen":        "qwen/qwen3.7-max",
+	"llama":       "meta-llama/llama-4-maverick",
+	"kimi":        "moonshotai/kimi-k2.5",
+	"openai":      "openai/gpt-5-nano",
+	"ollama":      "qwen3.6",
+	"opencode":    "claude-sonnet-4-6",
+	"opencode-go": "deepseek-v4-flash",
 }
 
 var anthropicToOpenRouter = map[string]string{
@@ -60,6 +62,12 @@ var (
 
 	ollamaOnce    sync.Once
 	ollamaCatalog map[string]catalog.ModelDef
+
+	opencodeGoOnce    sync.Once
+	opencodeGoCatalog map[string]catalog.ModelDef
+
+	opencodeZenOnce    sync.Once
+	opencodeZenCatalog map[string]catalog.ModelDef
 )
 
 func getAnthropicCatalog() map[string]catalog.ModelDef {
@@ -80,6 +88,16 @@ func getOpenRouterCatalog() map[string]catalog.ModelDef {
 func getOllamaCatalog() map[string]catalog.ModelDef {
 	ollamaOnce.Do(func() { ollamaCatalog = catalog.Ollama() })
 	return ollamaCatalog
+}
+
+func getOpenCodeGoCatalog() map[string]catalog.ModelDef {
+	opencodeGoOnce.Do(func() { opencodeGoCatalog = catalog.OpenCodeGo() })
+	return opencodeGoCatalog
+}
+
+func getOpenCodeZenCatalog() map[string]catalog.ModelDef {
+	opencodeZenOnce.Do(func() { opencodeZenCatalog = catalog.OpenCodeZen() })
+	return opencodeZenCatalog
 }
 
 // ResolveProvider builds a Provider from an exact model ID and provider name.
@@ -122,8 +140,22 @@ func ResolveProvider(modelID, provider string) (*Provider, error) {
 		}
 		return resolveOpenRouter(modelID, modelID)
 
+	case "opencode-go":
+		if _, ok := getOpenCodeGoCatalog()[modelID]; !ok {
+			return nil, fmt.Errorf("unknown OpenCode Go model %q — available: %s", modelID, catalogKeys(getOpenCodeGoCatalog()))
+		}
+		return resolveOpenCodeGo(modelID)
+
+	case "opencode":
+		if def, ok := getOpenCodeZenCatalog()[modelID]; ok {
+			return resolveOpenCodeZen(modelID, def)
+		}
+		return resolveOpenCodeZen(modelID, catalog.ModelDef{
+			ID: modelID, Label: modelID, ContextWindow: 128000,
+		})
+
 	default:
-		return nil, fmt.Errorf("unknown provider %q — use 'anthropic', 'openai', 'openrouter', or 'ollama'", provider)
+		return nil, fmt.Errorf("unknown provider %q — use 'anthropic', 'openai', 'openrouter', 'ollama', 'opencode', or 'opencode-go'", provider)
 	}
 }
 
@@ -146,6 +178,23 @@ func ResolveOllama(model, baseURL string) (*Provider, error) {
 	}
 
 	return p, nil
+}
+
+func openCodeGoFormat(model string) string {
+	switch model {
+	case "minimax-m3", "minimax-m2.7", "minimax-m2.5",
+		"qwen3.7-max", "qwen3.7-plus", "qwen3.6-plus":
+		return "anthropic"
+	default:
+		return "openai"
+	}
+}
+
+func openCodeZenFormat(model string) string {
+	if strings.HasPrefix(model, "claude-") || strings.HasPrefix(model, "qwen3.") {
+		return "anthropic"
+	}
+	return "openai"
 }
 
 func resolveAnthropic(model string) (*Provider, error) {
@@ -184,6 +233,35 @@ func resolveOpenRouter(id, slug string) (*Provider, error) {
 		p.OutputPricePerM = def.OutputPricePerM
 	}
 
+	return p, nil
+}
+
+func resolveOpenCodeGo(model string) (*Provider, error) {
+	apiKey := os.Getenv("OPENAICODE_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("OPENAICODE_API_KEY not set for OpenCode Go model %q", model)
+	}
+	baseURL := os.Getenv("GOGOGOT_OPENAICODE_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://opencode.ai/zen/go/v1"
+	}
+	def := getOpenCodeGoCatalog()[model]
+	p := providerFromDef(def, model, apiKey, baseURL, openCodeGoFormat(model))
+	p.ID = model
+	return p, nil
+}
+
+func resolveOpenCodeZen(model string, def catalog.ModelDef) (*Provider, error) {
+	apiKey := os.Getenv("OPENAICODE_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("OPENAICODE_API_KEY not set for OpenCode Zen model %q", model)
+	}
+	baseURL := os.Getenv("GOGOGOT_OPENAICODE_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://opencode.ai/zen/v1"
+	}
+	p := providerFromDef(def, model, apiKey, baseURL, openCodeZenFormat(model))
+	p.ID = model
 	return p, nil
 }
 

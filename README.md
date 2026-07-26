@@ -12,7 +12,7 @@ A **lightweight, extensible, and secure** open-source AI agent that lives on you
 
 - **Single binary, ~15 MB, ~10 MB RAM** — deploys with one `docker run` command
 - **Your keys stay on your server** — no cloud account, no telemetry, no phoning home
-- **You pick the model** — Anthropic, OpenAI, or any [OpenRouter](https://openrouter.ai) model
+- **You pick the model** — Anthropic, OpenAI, [OpenCode](https://opencode.ai) (Zen pay-as-you-go or Go subscription), or any [OpenRouter](https://openrouter.ai) model
 - **Extensible** — clean Go interfaces (`Adapter`, `Channel`, `Tool`) make it trivial to add providers, transports, or custom tools
 
 ## Quick Start
@@ -70,6 +70,8 @@ docker run -d --restart unless-stopped \
 </details>
 
 The image supports `linux/amd64` and `linux/arm64` and ships with a full Ubuntu environment (bash, git, Python, Node.js, ripgrep, sqlite, postgresql-client, and more).
+
+OpenCode Zen and Go share the same `OPENAICODE_API_KEY`. Set `GOGOGOT_OPENAICODE_BASE_URL` to override the default API endpoint.
 
 <details>
 <summary>Alternative: Docker Compose</summary>
@@ -145,6 +147,30 @@ GOGOGOT_TRANSPORT=telegram \
   go run ./cmd/gogogot
 ```
 
+For OpenCode Go (low-cost subscription, [sign up](https://opencode.ai/go)):
+
+```bash
+GOGOGOT_TRANSPORT=telegram \
+  TELEGRAM_BOT_TOKEN=... \
+  TELEGRAM_OWNER_ID=... \
+  GOGOGOT_PROVIDER=opencode-go \
+  OPENAICODE_API_KEY=sk-... \
+  GOGOGOT_MODEL=deepseek-v4-flash \
+  go run ./cmd/gogogot
+```
+
+For OpenCode Zen (pay-as-you-go, [curated models](https://opencode.ai/zen)):
+
+```bash
+GOGOGOT_TRANSPORT=telegram \
+  TELEGRAM_BOT_TOKEN=... \
+  TELEGRAM_OWNER_ID=... \
+  GOGOGOT_PROVIDER=opencode \
+  OPENAICODE_API_KEY=sk-... \
+  GOGOGOT_MODEL=claude-sonnet-4-6 \
+  go run ./cmd/gogogot
+```
+
 </details>
 
 ## Choosing a Model
@@ -152,10 +178,12 @@ GOGOGOT_TRANSPORT=telegram \
 Set `GOGOGOT_PROVIDER`, `GOGOGOT_MODEL`, and the corresponding API key. The agent will not start without all three.
 
 | Provider | `GOGOGOT_PROVIDER` | API key env | Example `GOGOGOT_MODEL` |
-|---|---|---|---|---|
+|---|---|---|---|---|---|
 | Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5` |
 | OpenAI | `openai` | `OPENAI_API_KEY` | `gpt-5.4`, `gpt-5.1`, `gpt-4.1`, `o3`, `o4-mini` |
 | OpenRouter | `openrouter` | `OPENROUTER_API_KEY` | `qwen/qwen3.7-max`, `deepseek/deepseek-v4-flash`, `x-ai/grok-build-0.1` |
+| OpenCode Zen | `opencode` | `OPENAICODE_API_KEY` | `claude-sonnet-4-6`, `deepseek-v4-flash`, `grok-4.5` |
+| OpenCode Go | `opencode-go` | `OPENAICODE_API_KEY` | `deepseek-v4-flash`, `grok-4.5`, `qwen3.7-max` |
 | Ollama | `ollama` | _(none)_ | `qwen3.6`, `llama4`, `mistral` (any local model) |
 
 Model metadata (context window, vision support, pricing) is stored in JSON catalogs under [`llm/catalog/`](internal/llm/catalog/) — just edit the JSON to add or update models.
@@ -178,8 +206,10 @@ For convenience, short aliases are supported as `GOGOGOT_MODEL` values:
 | `minimax` | `minimax/minimax-m2.5` |
 | `kimi` | `moonshotai/kimi-k2.5` |
 | `ollama` | `qwen3.6` (resolved locally, no API key needed) |
+| `opencode` | `claude-sonnet-4-6` (via OpenCode Zen) |
+| `opencode-go` | `deepseek-v4-flash` (via OpenCode Go) |
 
-Browse all available models: [Anthropic](https://platform.claude.com/docs/en/about-claude/models/overview) | [OpenAI](https://platform.openai.com/docs/models) | [OpenRouter](https://openrouter.ai/models) | Benchmarks: [PinchBench](https://pinchbench.com/)
+Browse all available models: [Anthropic](https://platform.claude.com/docs/en/about-claude/models/overview) | [OpenAI](https://platform.openai.com/docs/models) | [OpenRouter](https://openrouter.ai/models) | [OpenCode Zen/Go](https://opencode.ai/zen) | Benchmarks: [PinchBench](https://pinchbench.com/)
 
 ## Features
 
@@ -196,7 +226,7 @@ Browse all available models: [Anthropic](https://platform.claude.com/docs/en/abo
 - **Task planning** — session-scoped checklist for multi-step work
 - **Scheduling** — cron-based self-scheduling, persisted across restarts
 - **Compaction** — automatic context compression near token limits
-- **Multi-model** — Anthropic, OpenAI, OpenRouter, or local Ollama models
+- **Multi-model** — Anthropic, OpenAI, OpenRouter, OpenCode (Zen/Go), or local Ollama models
 - **Observability** — compact info-level iteration logs; full request/response dumps at trace level (`LOG_LEVEL=debug`)
 
 ## Use Cases

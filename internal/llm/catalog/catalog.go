@@ -27,10 +27,18 @@ var openrouterJSON []byte
 //go:embed ollama.json
 var ollamaJSON []byte
 
-func OpenAI() map[string]ModelDef     { return loadClean(openaiJSON) }
-func Anthropic() map[string]ModelDef  { return loadClean(anthropicJSON) }
-func OpenRouter() map[string]ModelDef { return loadOpenRouter(openrouterJSON) }
-func Ollama() map[string]ModelDef     { return loadClean(ollamaJSON) }
+//go:embed opencode-go.json
+var opencodeGoJSON []byte
+
+//go:embed opencode-zen.json
+var opencodeZenJSON []byte
+
+func OpenAI() map[string]ModelDef       { return loadClean(openaiJSON) }
+func Anthropic() map[string]ModelDef    { return loadClean(anthropicJSON) }
+func OpenRouter() map[string]ModelDef   { return loadOpenRouter(openrouterJSON) }
+func Ollama() map[string]ModelDef       { return loadClean(ollamaJSON) }
+func OpenCodeGo() map[string]ModelDef   { return loadClean(opencodeGoJSON) }
+func OpenCodeZen() map[string]ModelDef  { return loadClean(opencodeZenJSON) }
 
 func loadClean(data []byte) map[string]ModelDef {
 	var models []ModelDef

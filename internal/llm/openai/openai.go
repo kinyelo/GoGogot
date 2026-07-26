@@ -29,7 +29,7 @@ func NewAdapter(baseURL, apiKey string, supportsVision bool) *Adapter {
 	}
 
 	c := openai.Client{Options: opts}
-	c.Chat = openai.NewChatCompletionService(opts...)
+	c.Chat = openai.NewChatService(opts...)
 
 	return &Adapter{client: &c, supportsVision: supportsVision}
 }

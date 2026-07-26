@@ -27,6 +27,11 @@ func (b *Bus) Emit(ev Event) {
 	if b == nil || b.ch == nil {
 		return
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			log.Warn().Str("event", fmt.Sprintf("%T", ev)).Msg("event dropped — bus closed")
+		}
+	}()
 	select {
 	case b.ch <- ev:
 	default:
