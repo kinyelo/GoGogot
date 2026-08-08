@@ -26,9 +26,9 @@ type braveResponse struct {
 
 func WebSearchTool(braveAPIKey string) types.Tool {
 	return types.Tool{
-		Name:        "web_search",
-		Label:       "Searching the web",
-		Description: "Search the web for information using Brave Search. Returns top 5 results with title, URL, and description.",
+		Name:        "web_search_brave",
+		Label:       "Searching the web (Brave)",
+		Description: "Search the web for information using Brave Search (requires BRAVE_API_KEY). Returns top 5 results with title, URL, and description.",
 		DetailFunc: func(input map[string]any) string {
 			s, _ := input["query"].(string)
 			return s

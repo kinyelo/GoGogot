@@ -29,6 +29,7 @@ func NewRegistry(st store.Store, braveAPIKey string, searchFn ChatSearchFunc, ex
 		systemtools.FileSearchTool(),
 	}
 	all = append(all, systemtools.FileTools()...)
+	all = append(all, webtools.DuckDuckGoSearchTool())
 	all = append(all, webtools.WebSearchTool(braveAPIKey))
 	all = append(all, webtools.WebFetchTool())
 	all = append(all, webtools.WebRequestTool())
